@@ -18,12 +18,14 @@ public class CommandLineHelper {
 		+ "-p {port} forward proxy port number\n"
 		+ "-h - print help.. all other options are ignored and program terminates\n";
 
-    private static String	kDefaultOptions	= 	":hp:l:";
-	private static int		kDefaultPort	=	8989;
+    private static String	kDefaultOptions			= 	":hp:l:t:";
+	private static int		kDefaultPort			=	8989;
+	private static int		kDefaultThreadPoolSize	=	100;
 
-	private static int		s_port 		= kDefaultPort;
-	private static String	s_log4JConf	= null;
-	private static boolean	s_help 		= false;
+	private static int		s_port 				= kDefaultPort;
+	private static int		s_threadPoolSize	= kDefaultThreadPoolSize;
+	private static String	s_log4JConf			= null;
+	private static boolean	s_help 				= false;
 
 	public static void processArguments(String inProcessName, String inArgs[]) {
 		CommandLineHelper.processArguments(inProcessName, inArgs, kDefaultOptions);
@@ -42,6 +44,10 @@ public class CommandLineHelper {
 					setHelp(true);
 					break;
 
+				case 't':
+					setThreadPoolSize(theOpts.getOptarg());
+					break;
+					
 				case 'l':
 					setLog4JConf(theOpts.getOptarg());
 					break;
@@ -73,6 +79,7 @@ public class CommandLineHelper {
 		try {
 			CommandLineHelper.setPort(Integer.parseInt(inPort));
 		} catch (Throwable theErr) {
+			kLogger.error("Can't set port to: " + inPort + ". Using default of " + kDefaultPort, theErr);
 			CommandLineHelper.s_port = kDefaultPort;
 		}
 	}
@@ -99,5 +106,22 @@ public class CommandLineHelper {
 		{
 		return s_help;
 		}
+
+	public static int getThreadPoolSize() {
+		return s_threadPoolSize;
+	}
+
+	public static void setThreadPoolSize(int inThreadPoolSize) {
+		CommandLineHelper.s_threadPoolSize = inThreadPoolSize;
+	}
+
+	public static void setThreadPoolSize(String inThreadPoolSize) {
+		try {
+
+		} catch (Throwable theErr) {
+			kLogger.error("Can't set pool size to: " + inThreadPoolSize + ". Using default of " + kDefaultThreadPoolSize, theErr);
+			CommandLineHelper.s_threadPoolSize = kDefaultThreadPoolSize;
+		}
+	}
 
 }
