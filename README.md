@@ -10,7 +10,7 @@ This effort will use:
 
 ## Step 1
 - Useful article on [creating an HTTP server in Java](https://rjlfinn.medium.com/creating-a-http-server-in-java-9b6af7f9b3cd)
-- Exposted to [`Optionals`](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html) in Swift, but had not ecounterd them in Java before
+- Exposed to [`Optionals`](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html) in Swift, but had not ecounterd them in Java before
 
 Example Header
 
@@ -30,4 +30,4 @@ Sec-Fetch-User: ?1
 ```
 
 ## Notes
-- Wanted to use a dev container envornment for development but found is slow
+- Wanted to use a dev container enviornment for development but found is slow
