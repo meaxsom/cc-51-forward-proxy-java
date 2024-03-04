@@ -16,6 +16,7 @@ public class CommandLineHelper {
 
 	private final static String kHelpString = "-l {log4j-config} -  path to log4j config file\n"
 		+ "-p {port} forward proxy port number\n"
+		+ "-t {thread-count} number of threads to use\n"
 		+ "-h - print help.. all other options are ignored and program terminates\n";
 
     private static String	kDefaultOptions			= 	":hp:l:t:";
