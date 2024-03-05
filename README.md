@@ -11,6 +11,8 @@ This effort will use:
 ## Step 1
 - Useful article on [creating an HTTP server in Java](https://rjlfinn.medium.com/creating-a-http-server-in-java-9b6af7f9b3cd)
 - Exposed to [`Optionals`](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html) in Swift, but had not ecounterd them in Java before
+- [httpbin.org](http://httpbin.org/) is a nice HTTP/HTTPS Request & Response Service
+
 
 Example Header
 
