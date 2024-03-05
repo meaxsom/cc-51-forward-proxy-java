@@ -1,5 +1,11 @@
 package com.gruecorner.forwardproxy;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,5 +34,25 @@ public class ProxyHandlerTest {
 
         ProxyHandler theHandler = new ProxyHandler();
         theHandler.proxyRequest(theRequest);
+    }
+
+    @Test
+    public void testHandleInvalidResponse() {
+        ByteArrayOutputStream theStream = new ByteArrayOutputStream();
+
+        ProxyHandler theHandler = new ProxyHandler();
+        try {
+            theHandler.handleInvalidResponse(theStream);
+            theStream.close();
+
+            String theOutput = new String(theStream.toByteArray());
+            assertNotNull(theOutput);
+            assertTrue(theOutput.length() > 0);
+            assertTrue(theOutput.contains("Bad Request"));
+
+        } catch (IOException theErr) {
+            theErr.printStackTrace(System.err);
+            fail();
+        }
     }
 }
