@@ -54,7 +54,7 @@ class FwdProxy {
             try {
                 m_proxyHandler.handleConnection(inClientConnection.getInputStream(), inClientConnection.getOutputStream(), inClientConnection.getInetAddress(), inClientConnection.getLocalPort());
             } catch(Throwable theErr) {
-                kLogger.error(theErr);
+                kLogger.error("Some Problem", theErr);
             }
         };
 
