@@ -56,5 +56,5 @@ jar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     archiveBaseName = 'forward-proxy'
-    archiveVersion = '0.1.1'
+    archiveVersion = '0.1.5'
 }
