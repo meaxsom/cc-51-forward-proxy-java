@@ -89,11 +89,18 @@ public class HttpProxyRequest {
         m_port = inPort;
     }
 
-    public InetAddress getAddress() {
+    public InetAddress getInetAddress() {
         return m_address;
    }
 
-    public void setAddress(InetAddress inAddress) {
+   public String getInetAddressString() {
+    String result = "";
+    if (m_address != null)
+        result = m_address.getHostAddress();
+    return result;
+    }
+
+    public void setInetAddress(InetAddress inAddress) {
         m_address = inAddress;
     }
 }
