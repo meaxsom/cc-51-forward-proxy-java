@@ -14,6 +14,20 @@ This effort will use:
 - [httpbin.org](http://httpbin.org/) is a nice HTTP/HTTPS Request & Response Service
 
 
+## Step 2
+Pretty straight forward:
+- added a command line switch to `CommandLineHelper` for getting the name of the file containing banned hosts
+- added a `CommandLineHelper` method w/test to read the file into a `List`
+- ammended the `FwdProxy` class to accept the list of banned host names and hand it to the `ProxyHandler` class on construction
+- added a method w/test to evaluate a host against the banned list
+- had the `FwdProxy` class call the method to see if the host was banned
+- had to refactor the `handleInvalidResponse` method to supply a custom message and a `ResponseCode` to allow for better customization of error handling responses.
+- added `400 Forbidden` to `ResponseCode`
+- updated version number to "0.2.0"
+
+
+## Notes
+
 Example Header
 
 ```
