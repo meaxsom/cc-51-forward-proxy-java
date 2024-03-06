@@ -29,9 +29,9 @@ public class HttpProxyRequest {
             if (theRequestSize > 0) {
                 String[] theLineParts = inRequest.get(0).split("\\s+");
                 if (theLineParts.length == 3) {
-                    m_method = theLineParts[0].trim();
-                    m_requst = theLineParts[1].trim();
-                    m_protocol = theLineParts[2].trim();
+                        setMethod(theLineParts[0].trim());
+                        setRequst(theLineParts[1].trim());
+                        setProtocol(theLineParts[2].trim());
                 
                     if (theRequestSize > 1) {
                         for (String theLine : inRequest.subList(1, inRequest.size())) {
@@ -62,7 +62,21 @@ public class HttpProxyRequest {
     }
 
     public void setRequst(String inRequest) {
-        m_requst = inRequest;
+        String theRequest = inRequest;
+        kLogger.debug("Original Request: " + theRequest);
+
+        // adjust the request to contain a protocol if one is not there
+        if (inRequest != null) {
+            if (!inRequest.startsWith("http://") && !inRequest.startsWith("https://")) {
+                if (inRequest.contains("443"))
+                    theRequest = "https://" + inRequest;
+                else
+                    theRequest = "http://" + inRequest;
+            }
+
+        kLogger.debug("Adjusted Request: " + theRequest);
+        m_requst = theRequest;
+        }
     }
 
     public String getProtocol() {
