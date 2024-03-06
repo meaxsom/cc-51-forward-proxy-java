@@ -28,15 +28,14 @@ public class HttpReply {
         this.m_responseCode = inBuilder.m_responseCode;
         this.m_protocol = inBuilder.m_protocol;
 
-        String theBody = inBuilder.m_body;
-        if (theBody != null)
-            this.m_body = new String(inBuilder.m_body.getBytes(), StandardCharsets.UTF_8);
-        else
-            this.m_body = "";
-
         // assign headers and add in our content length
         m_headers = inBuilder.m_headers;
-        m_headers.put(kContentLengthHeaderKeyStd, String.valueOf(m_body.length()));
+
+        // only apply body and content-length header if this isn't a tunnel  
+        if (this.m_responseCode != ResponseCode.ProxyConnectionOK) {
+            this.m_body = inBuilder.m_body == null ? "" : new String(inBuilder.m_body.getBytes(), StandardCharsets.UTF_8);
+            m_headers.put(kContentLengthHeaderKeyStd, String.valueOf(m_body.length()));
+        }
     }
 
     public void send(OutputStream inOutputStream) throws IOException{
@@ -117,6 +116,7 @@ public class HttpReply {
     }
     public enum ResponseCode {
         OK(200, "OK"),
+        ProxyConnectionOK(200, "Connection established"),
         BadRequest(400, "Bad Request"),
         Forbidden(403, "Forbidden"),
         NotFound(404, "Not Found");
