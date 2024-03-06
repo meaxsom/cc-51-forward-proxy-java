@@ -118,6 +118,7 @@ public class HttpReply {
     public enum ResponseCode {
         OK(200, "OK"),
         BadRequest(400, "Bad Request"),
+        Forbidden(403, "Forbidden"),
         NotFound(404, "Not Found");
         
         public final int code;
