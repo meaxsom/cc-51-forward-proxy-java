@@ -30,8 +30,8 @@ class FwdProxy {
         kLogger.info("Started Server on Port " + inPort + " with " + inThreadPoolSize + " threads...");
     }
 
-    public void start(List<String> inBannedHosts) throws IOException {
-        m_proxyHandler = new ProxyHandler(inBannedHosts);
+    public void start(List<String> inBannedHost, List<String> inBannedWords) throws IOException {
+        m_proxyHandler = new ProxyHandler(inBannedHost, inBannedWords);
 
         // wait on a connection and then hand it off to the proxy handler
         while (true) {
@@ -82,7 +82,7 @@ class FwdProxy {
         else { // start the server
             try {
                 s_proxyServer = new FwdProxy(CommandLineHelper.getPort(), CommandLineHelper.getThreadPoolSize());
-                s_proxyServer.start(CommandLineHelper.getBannedHosts());
+                s_proxyServer.start(CommandLineHelper.getBannedHosts(), CommandLineHelper.getBannedWords());
             } catch (IOException theErr) {
                 kLogger.error("Can't start proxy server!", theErr);
             }

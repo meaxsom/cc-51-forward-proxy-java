@@ -35,7 +35,7 @@ public class ProxyHandlerTest {
         theMinimalList.add(kMinimalProxyTestString);
         HttpProxyRequest theRequest = new HttpProxyRequest(theMinimalList);
 
-        ProxyHandler theHandler = new ProxyHandler(null);
+        ProxyHandler theHandler = new ProxyHandler(null, null);
         theHandler.proxyRequest(theRequest);
     }
 
@@ -43,7 +43,7 @@ public class ProxyHandlerTest {
     public void testHandleInvalidResponse() {
         ByteArrayOutputStream theStream = new ByteArrayOutputStream();
 
-        ProxyHandler theHandler = new ProxyHandler(null);
+        ProxyHandler theHandler = new ProxyHandler(null, null);
         try {
             theHandler.handleInvalidResponse(theStream, HttpReply.ResponseCode.BadRequest, "Bad Stuff Happend!");
             theStream.close();
@@ -69,12 +69,18 @@ public class ProxyHandlerTest {
         List<String> theBannedHosts = new ArrayList<String>();
         theBannedHosts.add("facebook.com");
 
-        ProxyHandler theHandler = new ProxyHandler(theBannedHosts);
-        boolean isAllowed = theHandler.isHostAllowed(theRequest, theBannedHosts);
+        List<String> theBannedWords = new ArrayList<String>();
+        theBannedWords.add("facebook");
+
+        ProxyHandler theHandler = new ProxyHandler(theBannedHosts, theBannedWords);
+        boolean isAllowed = theHandler.isHostAllowed(theRequest, theBannedHosts, theBannedWords);
         assertTrue(isAllowed);
 
         theRequest.setRequst("http://WWW.faceBooK.coM");
-        isAllowed = theHandler.isHostAllowed(theRequest, theBannedHosts);
+        isAllowed = theHandler.isHostAllowed(theRequest, theBannedHosts, theBannedWords);
+        assertFalse(isAllowed);
+
+        isAllowed = theHandler.isAllowed(theRequest.getRequst(), theBannedWords);
         assertFalse(isAllowed);
     }
 }

@@ -32,9 +32,11 @@ public class ProxyHandler {
     private final static String kUserAgentHeaderValue       = "cc-51-proxy";
 
     private static List<String> s_bannedHosts          = null;
+    private static List<String> s_bannedWords          = null;
 
-    public ProxyHandler(List<String> inBannedHosts) {
+    public ProxyHandler(List<String> inBannedHosts, List<String> inBannedWords) {
         s_bannedHosts=inBannedHosts;
+        s_bannedWords = inBannedWords;
     }
 
     public void handleConnection(final InputStream inInputStream, final OutputStream inOutputStream, InetAddress inAddress, int inPort) throws IOException {
@@ -51,8 +53,13 @@ public class ProxyHandler {
                 Optional<HttpResponse<String>> theResponseOptional = proxyRequest(theProxyRequest);
                 if (theResponseOptional.isPresent()) {
                     HttpResponse<String> theResponse = theResponseOptional.get();
-                    if (theResponse.statusCode() == 200)
-                        handleResponse(theResponse, inOutputStream);
+                    if (theResponse.statusCode() == 200) {
+                        // check for banned words in the response body
+                        if (isWordsAllowed(theResponse.body()))
+                            handleResponse(theResponse, inOutputStream);
+                        else
+                            handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.Forbidden, "Website content not allowed.");
+                    }
                     else // should try to pass back a response code that matches the original
                         handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "Host returned: " + theResponse.statusCode());
                 } else
@@ -131,31 +138,45 @@ public class ProxyHandler {
     }
 
     private boolean isHostAllowed(HttpProxyRequest inRequest) {
-        return isHostAllowed(inRequest, s_bannedHosts);
+        return isHostAllowed(inRequest, s_bannedHosts, s_bannedWords);
     }
 
-    public boolean isHostAllowed(HttpProxyRequest inRequest, List<String> inBannedHosts) {
+    // check both host list AND word list
+    public boolean isHostAllowed(HttpProxyRequest inRequest, List<String> inBannedHosts, List<String> inBannedWords) {
         boolean result = true;
 
-        try
-            {
+        try {
             URL theUrl = inRequest.getRequst() != null ? new URL(inRequest.getRequst()) : null;
-            if (inBannedHosts != null && theUrl != null) {
-                // standardize for lower case compare
-                String theTargetHost = theUrl.getHost().toLowerCase();
+            if (theUrl != null)
+                result = isAllowed(theUrl.getHost(), inBannedHosts) && isAllowed(theUrl.getHost(), inBannedWords);
 
-                for (String theBannedHost : inBannedHosts) {
-                    if (theTargetHost.contains(theBannedHost)) {
-                        result = false;
-                        break;
-                    }
+        } catch(Throwable theErr) {
+            kLogger.error("can't evaluate if host " + inRequest.getRequst() + " is allowed, banning...");
+            result=false;
+        }
+        return result;
+    }
+
+    private boolean isWordsAllowed(String inData) {
+        return isAllowed(inData, s_bannedWords);
+    }
+
+    public boolean isAllowed(String inData, List<String> inBannedList) {
+        boolean result = true;
+
+        if (inBannedList != null && inData != null) {
+            // standardize for lower case compare
+            String theData = inData.toLowerCase();
+            for (String theBannedData : inBannedList) {
+                if (theData.contains(theBannedData)) {
+                    result = false;
+                    break;
                 }
             }
-        } catch (Throwable theErr) {
-            kLogger.error("can't evaluate if host is allowed, banning...");
-            result=false;
         }
 
         return result;
     }
+
+
 }
