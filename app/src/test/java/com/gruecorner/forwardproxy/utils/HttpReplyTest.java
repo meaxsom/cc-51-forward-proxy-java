@@ -48,4 +48,60 @@ public class HttpReplyTest {
             fail();
         }   
     }
-}
+
+    @Test
+    public void testHttpReplyContentLength() {
+        HttpReply theReply = HttpReply.Builder.newInstance()
+            .setProtocol(Protocol.HTTP11)
+            .setResponseCode(ResponseCode.OK)
+            .setBody("Hello World")
+            .addHeader("Content-Type", "text/plain")
+            .build();
+
+        ByteArrayOutputStream theStream = new ByteArrayOutputStream();
+
+        try {
+            theReply.send(theStream);
+            theStream.close();
+
+            String theOutput = new String(theStream.toByteArray());
+            assertNotNull(theOutput);
+            assertTrue(theOutput.length() > 0);
+            assertTrue(theOutput.contains("Hello World"));
+            assertTrue(theOutput.contains("Content-Length"));
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            fail();
+        }
+    }
+    @Test
+    public void testHttpReplyContentLengthFilter() {
+        HttpReply theReply = HttpReply.Builder.newInstance()
+            .setProtocol(Protocol.HTTP11)
+            .setResponseCode(ResponseCode.OK)
+            .setBody("Hello World")
+            .addHeader("Content-Type", "text/plain")
+            .addHeader("content-length", String.valueOf(0)) // input lower case
+            .addHeader("Content-Length", String.valueOf(30000)) // input upper case w/crazy value
+            .build();
+
+        ByteArrayOutputStream theStream = new ByteArrayOutputStream();
+
+        try {
+            theReply.send(theStream);
+            theStream.close();
+
+            String theOutput = new String(theStream.toByteArray());
+            assertNotNull(theOutput);
+            assertTrue(theOutput.length() > 0);
+            assertTrue(theOutput.contains("Hello World"));
+
+            // should have a content lenght but not 3K
+            assertTrue(theOutput.contains("Content-Length"));   
+            assertTrue(!theOutput.contains("30000"));
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            fail();
+        }
+    }
+}   

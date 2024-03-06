@@ -6,13 +6,23 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.Arrays;
 
 public class HttpReply {
+    private final static String kContentLengthHeaderKeyStd = "Content-Length";
+    private final static String kContentLengthHeaderKeyAlt = "content-length";
+
+    private static final String[] kRestrictedHeadersNames = new String[] {kContentLengthHeaderKeyStd, kContentLengthHeaderKeyAlt};
+    private static final Set<String> kRestrictedHeaders = new HashSet<>(Arrays.asList(kRestrictedHeadersNames));
+
     private ResponseCode m_responseCode = ResponseCode.OK;
     private Protocol m_protocol = Protocol.HTTP11;
     private String m_body = "";
     private Map<String, String> m_headers = new HashMap<String, String>();
+
 
     public HttpReply(Builder inBuilder) {
         this.m_responseCode = inBuilder.m_responseCode;
@@ -24,7 +34,9 @@ public class HttpReply {
         else
             this.m_body = "";
 
+        // assign headers and add in our content length
         m_headers = inBuilder.m_headers;
+        m_headers.put(kContentLengthHeaderKeyStd, String.valueOf(m_body.length()));
     }
 
     public void send(OutputStream inOutputStream) throws IOException{
@@ -73,13 +85,17 @@ public class HttpReply {
         }
 
         public Builder addHeader(String inKey, String inValue) {
-            m_headers.put(inKey, inValue);
+            // filter out any restricted headers
+            if (!kRestrictedHeaders.contains(inKey))
+                m_headers.put(inKey, inValue);
             return this;
         }
 
         public Builder setHeaders(Map<String, String> inHeaders) {
-            if (inHeaders != null)
-                 m_headers.putAll(inHeaders);
+            // if we use putAll, we'll miss the filtering
+            for (String theKey : inHeaders.keySet())
+                addHeader(theKey, inHeaders.get(theKey));
+        
             return this;
         }
 
