@@ -22,9 +22,8 @@ public class CommandLineHelperTest {
 
     @Test
     public void testConfigureBannedHosts() {
-        CommandLineHelper.configureBannedHosts(kBannedFilePath);
-        List<String> theSet = CommandLineHelper.getBannedHosts();
-        assertNotNull(theSet);
-        assertEquals(theSet.size(), 3);
+        List<String> theBannedHosts = CommandLineHelper.configureBannedData(kBannedFilePath);
+        assertNotNull(theBannedHosts);
+        assertEquals(theBannedHosts.size(), 3);
     }
 }

@@ -18,14 +18,15 @@ import org.apache.logging.log4j.core.config.DefaultConfiguration;
 public class CommandLineHelper {
 	private final static Logger kLogger =	LogManager.getLogger(CommandLineHelper.class.getName());
 
-    private static String	kDefaultOptions			= 	":hp:l:t:b:";
+    private static String	kDefaultOptions			= 	":hp:l:t:b:w:";
 	private static int		kDefaultPort			=	8989;
 	private static int		kDefaultThreadPoolSize	=	100;
 
 	private final static String kHelpString = "-l {log4j-config} -  path to log4j config file\n"
 		+ "-p {port} optional forward proxy port numberm default is " + kDefaultPort + "\n"
 		+ "-t {thread-count} optional number of threads to use; defaults to " + kDefaultThreadPoolSize + "\n"
-		+ "-b {banned-hosts} optional text file of banned hosts, 1 per line"
+		+ "-b {banned-hosts-file} optional text file of banned hosts, 1 per line\n"
+		+ "-w {banned-words-file} optional text file of banned words, 1 per line\n"
 		+ "-h prints this help.. all other options are ignored and program terminates\n";
 
 
@@ -33,8 +34,10 @@ public class CommandLineHelper {
 	private static int			s_threadPoolSize	= kDefaultThreadPoolSize;
 	private static String		s_log4JConf			= null;
 	private static String		s_bannedHostsFile	= null;
+	private static String		s_bannedWordsFile	= null;
 	private static boolean		s_help 				= false;
 	private static List<String>	s_bannedHosts		= new ArrayList<String>();
+	private static List<String>	s_bannedWords		= new ArrayList<String>();
 
 	public static void processArguments(String inProcessName, String inArgs[]) {
 		CommandLineHelper.processArguments(inProcessName, inArgs, kDefaultOptions);
@@ -64,6 +67,10 @@ public class CommandLineHelper {
 				case 't':
 					setThreadPoolSize(theOpts.getOptarg());
 					break;
+				
+				case 'w':
+					setBannedWordsFile(theOpts.getOptarg());
+					break;
             }
         }
 
@@ -82,7 +89,12 @@ public class CommandLineHelper {
 
 		// read in the banned hosts if supplied
 		if (s_bannedHostsFile != null)
-			configureBannedHosts(s_bannedHostsFile);
+			s_bannedHosts = configureBannedData(s_bannedHostsFile);
+
+		// read in the banned words if supplied
+		if (s_bannedWordsFile != null)
+			s_bannedWords = configureBannedData(s_bannedWordsFile);
+	
     }
 	public static int getPort() {
 		return s_port;
@@ -149,7 +161,21 @@ public class CommandLineHelper {
 		return s_bannedHosts;
 	}
 
-	public static void configureBannedHosts(String inBannedHostFile) {
+	public static String getBannedWordsFile() {
+		return s_bannedWordsFile;
+	}
+
+	public static void setBannedWordsFile(String inBannedWordsFile) {
+		s_bannedWordsFile = inBannedWordsFile;
+	}
+
+	public static List<String> getBannedWords() {
+		return s_bannedWords;
+	}
+
+	public static List<String> configureBannedData(String inBannedHostFile) {
+		List<String> result = new ArrayList<String>();
+
 		File theFile = new File(inBannedHostFile);
 		if (theFile.exists()) {
 			try {
@@ -158,7 +184,7 @@ public class CommandLineHelper {
 				String theLine = theReader.readLine();
 				while (theLine != null) {
 					// standardize on lower case
-					s_bannedHosts.add(theLine.toLowerCase());
+					result.add(theLine.toLowerCase());
 					theLine = theReader.readLine();
 				}
 				theReader.close();
@@ -167,6 +193,8 @@ public class CommandLineHelper {
 				kLogger.error("Can't read banned host file", theErr);
 			}
 		} else
-			kLogger.error(theFile.getAbsolutePath() + " does not exist. No site banning will be enforced");
+			kLogger.error(theFile.getAbsolutePath() + " does not exist.");
+
+		return result;
 	}
 }
