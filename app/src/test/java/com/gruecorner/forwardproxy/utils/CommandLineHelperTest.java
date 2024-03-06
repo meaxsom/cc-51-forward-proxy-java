@@ -3,7 +3,7 @@ package com.gruecorner.forwardproxy.utils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Set;
+import java.util.List;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -23,7 +23,7 @@ public class CommandLineHelperTest {
     @Test
     public void testConfigureBannedHosts() {
         CommandLineHelper.configureBannedHosts(kBannedFilePath);
-        Set<String> theSet = CommandLineHelper.getBannedHosts();
+        List<String> theSet = CommandLineHelper.getBannedHosts();
         assertNotNull(theSet);
         assertEquals(theSet.size(), 3);
     }
