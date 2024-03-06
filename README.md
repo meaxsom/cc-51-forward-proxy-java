@@ -14,7 +14,7 @@ This effort will use:
 - [httpbin.org](http://httpbin.org/) is a nice HTTP/HTTPS Request & Response Service
 
 
-## Step 2
+## Step 2 Banned Hosts
 Pretty straight forward:
 - added a command line switch to `CommandLineHelper` for getting the name of the file containing banned hosts
 - added a `CommandLineHelper` method w/test to read the file into a `List`
@@ -25,12 +25,22 @@ Pretty straight forward:
 - added `400 Forbidden` to `ResponseCode`
 - updated version number to "0.2.0"
 
-## Step 3
+
+## Step 3: Banned Words
 - much the same wiring process for banned hosts:
     - read in with `CommandLineHelper` - some refactoring to make it more generic
     - hand it off to `FwdProxy` for use with `ProxyHandler`
     - create a method to check for banned words and return result
     - sent approperate response if check fails
+
+
+## Step 4: Log Activity
+- log activity to a file and console
+    - use `Log4J` to set up a console and access log config tied to a class
+        - modify based on preference
+    - create `AccessLogger` class to handle standard types of logging
+    - profit!
+
 
 ## Notes
 
