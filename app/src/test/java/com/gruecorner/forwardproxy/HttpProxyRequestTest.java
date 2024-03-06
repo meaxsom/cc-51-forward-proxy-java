@@ -16,7 +16,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class HttpProxyRequestTest {
-    private static final String kMinimalTestString = "GET / HTTP/1.1";
+    private static final String kMinimalTestString = "GET http://example.org/ HTTP/1.1";
+    private static final String kConnectTestString = "CONNECT httpbin.org:443 HTTP/1.1";
+
     private static final String kBadTestString = "GETsdfsdff/ HTTP/1.1";
     private static final String kHeadersTestString = "Connection: keep-alive";
 
@@ -76,7 +78,7 @@ public class HttpProxyRequestTest {
         HttpProxyRequest theRequest = new HttpProxyRequest(theMinimalList);
         assertEquals(theRequest.getMethod(), "GET");
         assertEquals(theRequest.getProtocol(), "HTTP/1.1");
-        assertEquals(theRequest.getRequst(), "/");
+        assertEquals(theRequest.getRequst(), "http://example.org/");
 
         Map<String, String> theHeaders = theRequest.getHeaders();
         assertNotNull(theHeaders);
@@ -93,7 +95,7 @@ public class HttpProxyRequestTest {
         HttpProxyRequest theRequest = new HttpProxyRequest(theMinimalList);
         assertEquals(theRequest.getMethod(), "GET");
         assertEquals(theRequest.getProtocol(), "HTTP/1.1");
-        assertEquals(theRequest.getRequst(), "/");
+        assertEquals(theRequest.getRequst(), "http://example.org/");
 
         Map<String, String> theHeaders = theRequest.getHeaders();
         assertNotNull(theHeaders);
@@ -102,4 +104,24 @@ public class HttpProxyRequestTest {
         assertEquals(theHeaders.get("Connection"), "keep-alive");
         assertNull(theHeaders.get("Accept-Language"));
     }
+
+    @Test
+    public void testConnectHttpProxyRequest() {
+        List<String> theMinimalList = new ArrayList<String>();
+        theMinimalList.add(kConnectTestString);
+        theMinimalList.add(kHeadersTestString);
+
+        HttpProxyRequest theRequest = new HttpProxyRequest(theMinimalList);
+        assertEquals(theRequest.getMethod(), "CONNECT");
+        assertEquals(theRequest.getProtocol(), "HTTP/1.1");
+        assertEquals(theRequest.getRequst(), "https://httpbin.org:443");
+
+        Map<String, String> theHeaders = theRequest.getHeaders();
+        assertNotNull(theHeaders);
+
+        assertEquals(theHeaders.size(), 1);
+        assertEquals(theHeaders.get("Connection"), "keep-alive");
+        assertNull(theHeaders.get("Accept-Language"));
+    }
+
 }
