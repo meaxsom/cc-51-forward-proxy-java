@@ -5,8 +5,8 @@ import gnu.getopt.Getopt;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +34,7 @@ public class CommandLineHelper {
 	private static String		s_log4JConf			= null;
 	private static String		s_bannedHostsFile	= null;
 	private static boolean		s_help 				= false;
-	private static Set<String>	s_bannedHosts		= new HashSet<String>();
+	private static List<String>	s_bannedHosts		= new ArrayList<String>();
 
 	public static void processArguments(String inProcessName, String inArgs[]) {
 		CommandLineHelper.processArguments(inProcessName, inArgs, kDefaultOptions);
@@ -79,6 +79,10 @@ public class CommandLineHelper {
 		    Configurator.initialize(new DefaultConfiguration());
 		    Configurator.setRootLevel(Level.DEBUG);
 		}
+
+		// read in the banned hosts if supplied
+		if (s_bannedHostsFile != null)
+			configureBannedHosts(s_bannedHostsFile);
     }
 	public static int getPort() {
 		return s_port;
@@ -133,15 +137,15 @@ public class CommandLineHelper {
 			setThreadPoolSize(kDefaultThreadPoolSize);
 		}
 	}
-	public static Set<String> getBannedHostsFile() {
-		return s_bannedHosts;
+	public static String getBannedHostsFile() {
+		return s_bannedHostsFile;
 	}
 
 	public static void setBannedHostsFile(String inBannedHostsFile) {
 		s_bannedHostsFile = inBannedHostsFile;
 	}
 
-	public static Set<String> getBannedHosts() {
+	public static List<String> getBannedHosts() {
 		return s_bannedHosts;
 	}
 
@@ -153,7 +157,8 @@ public class CommandLineHelper {
 
 				String theLine = theReader.readLine();
 				while (theLine != null) {
-					s_bannedHosts.add(theLine);
+					// standardize on lower case
+					s_bannedHosts.add(theLine.toLowerCase());
 					theLine = theReader.readLine();
 				}
 				theReader.close();
