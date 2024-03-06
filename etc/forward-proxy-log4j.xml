@@ -3,10 +3,38 @@
 
   <Properties>
     <Property name="LOG_DIR">logs</Property>
-	<Property name="APP_NAME">forward-proxy</Property>
+    <Property name="APP_NAME">forward-proxy</Property>
+  	<Property name="ACCESS_LOG_NAME">access-forward-proxy</Property>
+
   </Properties>
 
   <Appenders>
+    <Console
+      name = "STDOUT">
+        <PatternLayout>
+          <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %m%n</Pattern>
+        </PatternLayout>
+    </Console>
+
+    <RollingFile
+      name="rollingFileAccess"
+      fileName="${LOG_DIR}/${ACCESS_LOG_NAME}.log"
+      filePattern="${LOG_DIR}/${ACCESS_LOG_NAME}.%i.log.gz"
+      ignoreExceptions="false">
+      <PatternLayout>
+          <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %m%n</Pattern>
+      </PatternLayout>
+      <Policies>
+          <SizeBasedTriggeringPolicy size="10MB" />
+      </Policies>
+      <DefaultRolloverStrategy max="5">
+        <Delete basePath="${LOG_DIR}" maxDepth="2">
+          <IfFileName glob="*/access-*.log.gz" />
+          <IfLastModified age="P30D" />
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+
     <RollingFile
       name="rollingFile"
       fileName="${LOG_DIR}/${APP_NAME}.log"
@@ -20,7 +48,7 @@
       </Policies>
       <DefaultRolloverStrategy max="5">
         <Delete basePath="${LOG_DIR}" maxDepth="2">
-          <IfFileName glob="*/app-*.log.gz" />
+          <IfFileName glob="*/forward-*.log.gz" />
           <IfLastModified age="P30D" />
         </Delete>
       </DefaultRolloverStrategy>
@@ -31,6 +59,12 @@
     <Root level="info">
       <AppenderRef ref="rollingFile"/>
     </Root>
+
+    <Logger name="com.gruecorner.forwardproxy.utils.AccessLogger" level="info">
+      <AppenderRef ref="STDOUT"/>
+      <AppenderRef ref="rollingFileAccess"/>
+    </Logger>
+
   </Loggers>
 
 </Configuration>
