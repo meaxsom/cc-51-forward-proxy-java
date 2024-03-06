@@ -37,6 +37,8 @@ public class ProxyHandlerTest {
 
         ProxyHandler theHandler = new ProxyHandler(null, null);
         theHandler.proxyRequest(theRequest);
+
+        // TODO: Fix the remainder of this test
     }
 
     @Test
@@ -45,7 +47,11 @@ public class ProxyHandlerTest {
 
         ProxyHandler theHandler = new ProxyHandler(null, null);
         try {
-            theHandler.handleInvalidResponse(theStream, HttpReply.ResponseCode.BadRequest, "Bad Stuff Happend!");
+            List<String> theMinimalList = new ArrayList<String>();
+            theMinimalList.add(kMinimalProxyTestString);
+            HttpProxyRequest theRequest = new HttpProxyRequest(theMinimalList);
+
+            theHandler.handleInvalidResponse(theRequest, theStream, HttpReply.ResponseCode.BadRequest, "Bad Stuff Happend!");
             theStream.close();
 
             String theOutput = new String(theStream.toByteArray());
