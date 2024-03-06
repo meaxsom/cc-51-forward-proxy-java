@@ -1,5 +1,6 @@
 package com.gruecorner.forwardproxy;
 
+import com.gruecorner.forwardproxy.utils.AccessLogger;
 import com.gruecorner.forwardproxy.utils.HttpReply;
 import com.gruecorner.forwardproxy.utils.HttpReply.ResponseCode;
 
@@ -56,18 +57,18 @@ public class ProxyHandler {
                     if (theResponse.statusCode() == 200) {
                         // check for banned words in the response body
                         if (isWordsAllowed(theResponse.body()))
-                            handleResponse(theResponse, inOutputStream);
+                            handleResponse(theProxyRequest, theResponse, inOutputStream);
                         else
-                            handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.Forbidden, "Website content not allowed.");
+                            handleInvalidResponse(theProxyRequest, inOutputStream, HttpReply.ResponseCode.Forbidden, "Website content not allowed.");
                     }
                     else // should try to pass back a response code that matches the original
-                        handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "Host returned: " + theResponse.statusCode());
+                        handleInvalidResponse(theProxyRequest, inOutputStream, HttpReply.ResponseCode.BadRequest, "Host returned: " + theResponse.statusCode());
                 } else
-                    handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "No response from host");
+                    handleInvalidResponse(theProxyRequest, inOutputStream, HttpReply.ResponseCode.BadRequest, "No response from host");
             } else
-                handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.Forbidden, "Website not allowed: " + theProxyRequest.getRequst());
+                handleInvalidResponse(theProxyRequest, inOutputStream, HttpReply.ResponseCode.Forbidden, "Website not allowed: " + theProxyRequest.getRequst());
         } else {
-            handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "Request could not be decoded...");
+            handleInvalidResponse(null, inOutputStream, HttpReply.ResponseCode.BadRequest, "Request could not be decoded...");
             kLogger.error("Could not decode request");
         }
         
@@ -95,8 +96,8 @@ public class ProxyHandler {
             
         try {
             // report on the request.. should go to configured logger
-            System.out.println("Request made. Target: " + inProxyRequest.getRequst() + " Client: " + inProxyRequest.getInetAddressString() + ":" + inProxyRequest.getPort());
-
+            AccessLogger.log("Client: " + inProxyRequest.getInetAddressString() + " Request URL: " + inProxyRequest.getRequst());
+ 
             HttpResponse<String> theResponse = theClient.send(theHttpRequest, BodyHandlers.ofString());
             result = Optional.of(theResponse);
         } catch(Throwable theErr) {
@@ -106,7 +107,7 @@ public class ProxyHandler {
     return result;
     }
 
-    public void handleResponse(HttpResponse<String> inResponse, OutputStream inOutputStream) throws IOException {
+    public void handleResponse(HttpProxyRequest inRequest, HttpResponse<String> inResponse, OutputStream inOutputStream) throws IOException {
         if (inResponse != null) {
             // convert headers into our style if they exist
             Map<String, String> theNewHeaders = new HashMap<String, String>();
@@ -125,16 +126,18 @@ public class ProxyHandler {
                 .setHeaders(theNewHeaders).build();
 
             theReply.send(inOutputStream);
+            AccessLogger.log(inRequest, HttpReply.ResponseCode.OK);
         } else
-            handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "Bad Request...");
+            handleInvalidResponse(inRequest, inOutputStream, HttpReply.ResponseCode.BadRequest, "Bad Request...");
     }
 
-    public void handleInvalidResponse(OutputStream inOutputStream, ResponseCode inResponseCode, String inMessage) throws IOException {
+    public void handleInvalidResponse(HttpProxyRequest inRequest, OutputStream inOutputStream, ResponseCode inResponseCode, String inMessage) throws IOException {
         HttpReply theNotFoundReply = HttpReply.Builder.newInstance()
             .setBody(inMessage)
             .setResponseCode(inResponseCode)
             .build();
         theNotFoundReply.send(inOutputStream);
+        AccessLogger.log(inRequest, inResponseCode);
     }
 
     private boolean isHostAllowed(HttpProxyRequest inRequest) {
