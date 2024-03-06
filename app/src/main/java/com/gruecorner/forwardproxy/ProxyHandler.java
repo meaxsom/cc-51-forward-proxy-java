@@ -1,6 +1,7 @@
 package com.gruecorner.forwardproxy;
 
 import com.gruecorner.forwardproxy.utils.HttpReply;
+import com.gruecorner.forwardproxy.utils.HttpReply.ResponseCode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +14,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.net.InetAddress;
 import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,12 +26,15 @@ import org.apache.logging.log4j.Logger;
 public class ProxyHandler {
 	private final static Logger kLogger =	LogManager.getLogger(ProxyHandler.class.getName());
 
-    private final static String kXForwardedForHeaderKey = "X-Forwarded-For";
-    private final static String kDefaultFowardAddress = "127.0.0.1";
-    private final static String kUserAgentHeaderKey = "User-Agent";
-    private final static String kUserAgentHeaderValue = "cc-51-proxy";
+    private final static String kXForwardedForHeaderKey     = "X-Forwarded-For";
+    private final static String kDefaultFowardAddress       = "127.0.0.1";
+    private final static String kUserAgentHeaderKey         = "User-Agent";
+    private final static String kUserAgentHeaderValue       = "cc-51-proxy";
 
-    public ProxyHandler() {
+    private static List<String> s_bannedHosts          = null;
+
+    public ProxyHandler(List<String> inBannedHosts) {
+        s_bannedHosts=inBannedHosts;
     }
 
     public void handleConnection(final InputStream inInputStream, final OutputStream inOutputStream, InetAddress inAddress, int inPort) throws IOException {
@@ -38,21 +43,24 @@ public class ProxyHandler {
         if (theRequest.isPresent()) {
             HttpProxyRequest theProxyRequest = theRequest.get();
 
-            // pass along the client address and port to the request
-            theProxyRequest.setInetAddress(inAddress);
-            theProxyRequest.setPort(inPort);
+            if (isHostAllowed(theProxyRequest)) {
+                // pass along the client address and port to the request
+                theProxyRequest.setInetAddress(inAddress);
+                theProxyRequest.setPort(inPort);
 
-            Optional<HttpResponse<String>> theResponseOptional = proxyRequest(theProxyRequest);
-            if (theResponseOptional.isPresent()) {
-                HttpResponse<String> theResponse = theResponseOptional.get();
-                if (theResponse.statusCode() == 200)
-                    handleResponse(theResponse, inOutputStream);
-                else // should try to pass back a response code that matches the original
-                    handleInvalidResponse(inOutputStream);
+                Optional<HttpResponse<String>> theResponseOptional = proxyRequest(theProxyRequest);
+                if (theResponseOptional.isPresent()) {
+                    HttpResponse<String> theResponse = theResponseOptional.get();
+                    if (theResponse.statusCode() == 200)
+                        handleResponse(theResponse, inOutputStream);
+                    else // should try to pass back a response code that matches the original
+                        handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "Host returned: " + theResponse.statusCode());
+                } else
+                    handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "No response from host");
             } else
-                handleInvalidResponse(inOutputStream);
+                handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.Forbidden, "Website not allowed: " + theProxyRequest.getRequst());
         } else {
-            handleInvalidResponse(inOutputStream);
+            handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "Request could not be decoded...");
             kLogger.error("Could not decode request");
         }
         
@@ -111,14 +119,43 @@ public class ProxyHandler {
 
             theReply.send(inOutputStream);
         } else
-            handleInvalidResponse(inOutputStream);
+            handleInvalidResponse(inOutputStream, HttpReply.ResponseCode.BadRequest, "Bad Request...");
     }
 
-    public void handleInvalidResponse(OutputStream inOutputStream) throws IOException {
+    public void handleInvalidResponse(OutputStream inOutputStream, ResponseCode inResponseCode, String inMessage) throws IOException {
         HttpReply theNotFoundReply = HttpReply.Builder.newInstance()
-            .setBody("Bad Request...")
-            .setResponseCode(HttpReply.ResponseCode.BadRequest)
+            .setBody(inMessage)
+            .setResponseCode(inResponseCode)
             .build();
         theNotFoundReply.send(inOutputStream);
+    }
+
+    private boolean isHostAllowed(HttpProxyRequest inRequest) {
+        return isHostAllowed(inRequest, s_bannedHosts);
+    }
+
+    public boolean isHostAllowed(HttpProxyRequest inRequest, List<String> inBannedHosts) {
+        boolean result = true;
+
+        try
+            {
+            URL theUrl = inRequest.getRequst() != null ? new URL(inRequest.getRequst()) : null;
+            if (inBannedHosts != null && theUrl != null) {
+                // standardize for lower case compare
+                String theTargetHost = theUrl.getHost().toLowerCase();
+
+                for (String theBannedHost : inBannedHosts) {
+                    if (theTargetHost.contains(theBannedHost)) {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+        } catch (Throwable theErr) {
+            kLogger.error("can't evaluate if host is allowed, banning...");
+            result=false;
+        }
+
+        return result;
     }
 }

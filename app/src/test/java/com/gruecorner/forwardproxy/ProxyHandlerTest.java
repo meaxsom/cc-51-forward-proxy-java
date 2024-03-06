@@ -1,5 +1,6 @@
 package com.gruecorner.forwardproxy;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -14,6 +15,8 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.DefaultConfiguration;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.gruecorner.forwardproxy.utils.HttpReply;
 
 public class ProxyHandlerTest {
     private final static String kMinimalProxyTestString = "GET http://httpbin.org/ip HTTP/1.1";
@@ -32,7 +35,7 @@ public class ProxyHandlerTest {
         theMinimalList.add(kMinimalProxyTestString);
         HttpProxyRequest theRequest = new HttpProxyRequest(theMinimalList);
 
-        ProxyHandler theHandler = new ProxyHandler();
+        ProxyHandler theHandler = new ProxyHandler(null);
         theHandler.proxyRequest(theRequest);
     }
 
@@ -40,9 +43,9 @@ public class ProxyHandlerTest {
     public void testHandleInvalidResponse() {
         ByteArrayOutputStream theStream = new ByteArrayOutputStream();
 
-        ProxyHandler theHandler = new ProxyHandler();
+        ProxyHandler theHandler = new ProxyHandler(null);
         try {
-            theHandler.handleInvalidResponse(theStream);
+            theHandler.handleInvalidResponse(theStream, HttpReply.ResponseCode.BadRequest, "Bad Stuff Happend!");
             theStream.close();
 
             String theOutput = new String(theStream.toByteArray());
@@ -54,5 +57,24 @@ public class ProxyHandlerTest {
             theErr.printStackTrace(System.err);
             fail();
         }
+    }
+
+    @Test
+    public void testHandlerIsBanned() {
+        List<String> theMinimalList = new ArrayList<String>();
+        theMinimalList.add(kMinimalProxyTestString);
+        HttpProxyRequest theRequest = new HttpProxyRequest(theMinimalList);
+
+
+        List<String> theBannedHosts = new ArrayList<String>();
+        theBannedHosts.add("facebook.com");
+
+        ProxyHandler theHandler = new ProxyHandler(theBannedHosts);
+        boolean isAllowed = theHandler.isHostAllowed(theRequest, theBannedHosts);
+        assertTrue(isAllowed);
+
+        theRequest.setRequst("http://WWW.faceBooK.coM");
+        isAllowed = theHandler.isHostAllowed(theRequest, theBannedHosts);
+        assertFalse(isAllowed);
     }
 }
