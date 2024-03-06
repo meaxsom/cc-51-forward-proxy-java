@@ -25,6 +25,12 @@ Pretty straight forward:
 - added `400 Forbidden` to `ResponseCode`
 - updated version number to "0.2.0"
 
+## Step 3
+- much the same wiring process for banned hosts:
+    - read in with `CommandLineHelper` - some refactoring to make it more generic
+    - hand it off to `FwdProxy` for use with `ProxyHandler`
+    - create a method to check for banned words and return result
+    - sent approperate response if check fails
 
 ## Notes
 
