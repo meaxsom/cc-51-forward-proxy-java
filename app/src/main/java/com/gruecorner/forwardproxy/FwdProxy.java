@@ -3,6 +3,8 @@ package com.gruecorner.forwardproxy;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -28,8 +30,8 @@ class FwdProxy {
         kLogger.info("Started Server on Port " + inPort + " with " + inThreadPoolSize + " threads...");
     }
 
-    public void start() throws IOException {
-        m_proxyHandler = new ProxyHandler();
+    public void start(List<String> inBannedHosts) throws IOException {
+        m_proxyHandler = new ProxyHandler(inBannedHosts);
 
         // wait on a connection and then hand it off to the proxy handler
         while (true) {
@@ -80,7 +82,7 @@ class FwdProxy {
         else { // start the server
             try {
                 s_proxyServer = new FwdProxy(CommandLineHelper.getPort(), CommandLineHelper.getThreadPoolSize());
-                s_proxyServer.start();
+                s_proxyServer.start(CommandLineHelper.getBannedHosts());
             } catch (IOException theErr) {
                 kLogger.error("Can't start proxy server!", theErr);
             }
