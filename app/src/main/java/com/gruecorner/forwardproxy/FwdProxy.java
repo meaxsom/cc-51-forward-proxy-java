@@ -57,6 +57,14 @@ class FwdProxy {
                 m_proxyHandler.handleConnection(inClientConnection.getInputStream(), inClientConnection.getOutputStream(), inClientConnection.getInetAddress(), inClientConnection.getLocalPort());
             } catch(Throwable theErr) {
                 kLogger.error("Some Problem", theErr);
+            } finally {
+                try {
+                    kLogger.debug("Closing client connection");
+                    inClientConnection.close();
+                } catch(Throwable theErr) {
+                    kLogger.error("Can't close client connection", theErr);
+                }
+        
             }
         };
 
