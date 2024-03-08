@@ -41,10 +41,27 @@ Pretty straight forward:
     - create `AccessLogger` class to handle standard types of logging
     - profit!
 
+## Step 5: HTTPS Tunnel
+- Request has `CONNECT` instead of `GET` as the HTTP `verb` that tells the server it needs an HTTPS tunnel.
+    - [Handling CONNECT messsage from client](https://greenbytes.de/tech/webdav/draft-ietf-httpbis-p2-semantics-26.html#CONNECT)
+    - [Responding to a CONNECT](https://stackoverflow.com/questions/28495938/how-do-i-respond-to-a-connect-method-request-in-a-proxy-server-using-socket-in)
+    
+- Ended up being simpler than I thought but I over complicated the solution initially and had to find my way back to a simplier path.
+- Hooking the host/port up to my browser it's successfully proxying browser requests!
+- I think we're done here!!
 
 ## Notes
+- Wanted to use a Java dev container enviornment for development but found is slow
 
-Example Header
+- for server reading from ssl socket
+    - [SSL/TSL Socket Overlay](https://docs.oracle.com/javase/7/docs/api/javax/net/ssl/SSLSocketFactory.html#createSocket%28java.net.Socket,%20java.lang.String,%20int,%20boolean%29)
+    - [SSL Server Socket Example](https://stackoverflow.com/questions/47068155/is-it-possible-to-use-java-serversocket-to-accept-https-requests)
+    - [SSL/TSL Server Code Sample](http://www.java2s.com/Tutorial/Java/0490__Security/HttpsSocketClient.htm)
+
+- [for tunneling](https://github.com/mukatee/java-tcp-tunnel/blob/master/src/net/kanstren/tcptunnel/forwarder/TCPTunnel.java)
+- [simpler tunneling](https://stackoverflow.com/questions/18273703/tunneling-two-socket-client-in-java)
+
+- Example HTTP Request w/Headers
 
 ```
 GET /kl;sjdfjskl/sdfasdf.xml?peter=bob&jack=jill HTTP/1.1
@@ -61,5 +78,3 @@ Sec-Fetch-Site: none
 Sec-Fetch-User: ?1
 ```
 
-## Notes
-- Wanted to use a dev container enviornment for development but found is slow
